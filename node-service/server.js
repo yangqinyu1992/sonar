@@ -1,48 +1,65 @@
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
+const { WebSocketServer } = require('ws');
+const { setBroadcaster } = require('./wsHub');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-// The MONGO_URI is provided by the Docker environment, defaulting to a local instance for non-Docker development.
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/testdb';
+
+// Basic CORS for direct calls if needed (kept permissive)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Successfully connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
-// A simple schema for demonstration
-const ItemSchema = new mongoose.Schema({
-  name: String,
-  date: { type: Date, default: Date.now }
-});
-const Item = mongoose.model('Item', ItemSchema);
+// Routes (modularized)
+const indexRouter = require('./routes/index');
+const itemsRouter = require('./routes/items');
+const versionRouter = require('./routes/version');
+const authRouter = require('./routes/auth');
 
-app.get('/', (req, res) => {
-  res.send('Hello from Node.js service! Connected to MongoDB.');
+app.use('/', indexRouter);
+app.use('/api/items', itemsRouter);
+app.use('/api/version', versionRouter);
+app.use('/api/auth', authRouter);
+
+// Create HTTP server to attach WebSocket
+const server = http.createServer(app);
+
+// WebSocket for version push
+const APP_VERSION = process.env.APP_VERSION || '';
+const BUILD_TIME = process.env.BUILD_TIME || '';
+const COMMIT_SHA = process.env.COMMIT_SHA || '';
+
+const wss = new WebSocketServer({ server, path: '/ws/version' });
+
+function getVersionPayload(custom) {
+  const data = custom || { version: APP_VERSION, buildTime: BUILD_TIME, commit: COMMIT_SHA };
+  return JSON.stringify({ type: 'version', ...data });
+}
+
+wss.on('connection', (ws) => {
+  try { ws.send(getVersionPayload()); } catch {}
+  ws.on('message', () => {});
 });
 
-// Endpoint to add an item to the database
-app.get('/add', async (req, res) => {
-  try {
-    const newItem = new Item({ name: `Item ${Date.now()}` });
-    await newItem.save();
-    res.status(201).send(`Added new item: ${newItem.name}`);
-  } catch (error) {
-    res.status(500).send('Error adding item to database.');
-  }
+setBroadcaster((payload) => {
+  const message = typeof payload === 'string' ? payload : getVersionPayload(payload);
+  wss.clients.forEach((client) => {
+    try { client.send(message); } catch {}
+  });
 });
 
-// Endpoint to list items
-app.get('/items', async (req, res) => {
-  try {
-    const items = await Item.find();
-    res.json(items);
-  } catch (error) {
-    res.status(500).send('Error fetching items from database.');
-  }
-});
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

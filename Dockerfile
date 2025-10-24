@@ -31,6 +31,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 复制构建的前端文件到 Nginx 目录
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# 注入版本信息文件，供前端轮询检测更新
+ARG APP_VERSION="dev"
+RUN sh -c 'echo "$APP_VERSION" > /usr/share/nginx/html/version.txt'
+
 # 暴露端口
 EXPOSE 80
 

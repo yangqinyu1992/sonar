@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
     ports:
       - "${FRONTEND_HOST_PORT:-80}:80"
     networks:
@@ -19,6 +21,12 @@ services:
       - "${BACKEND_HOST_PORT:-3000}:3000"
     environment:
       - MONGO_URI=mongodb://database:27017/mydatabase
+      - APP_VERSION=${APP_VERSION:-dev}
+      - BUILD_TIME=${BUILD_TIME:-}
+      - COMMIT_SHA=${COMMIT_SHA:-}
+      - JWT_SECRET=${JWT_SECRET:-please_change}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - VERSION_BROADCAST_TOKEN=${VERSION_BROADCAST_TOKEN:-please_change}
     networks:
       - app-network
     depends_on:

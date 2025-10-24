@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:remote": "vite build --mode remote",
     "preview": "vite preview"
   },
   "dependencies": {
-    "qiankun": "^2.10.16",
-    "vue": "^3.4.29"
+    "vue": "^3.4.29",
+    "vue-router": "^4.3.2"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^5.4.2",

@@ -2,17 +2,6 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'
-import { registerMicroApps, start } from 'qiankun';
+import router from './router'
 
-registerMicroApps([
-  {
-    name: 'VueMicroApp',
-    entry: '//localhost:5174',
-    container: '#react-container',
-    activeRule: '/react',
-  },
-]);
-
-start();
-
-createApp(App).mount('#app')
+createApp(App).use(router).mount('#app')
