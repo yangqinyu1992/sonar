@@ -1,3 +1,10 @@
+/*
+ * 示例 Items 路由（演示 MongoDB 读写）
+ * 路径前缀：/api/items
+ * - GET    /api/items        —— 查询列表
+ * - GET    /api/items/add    —— 兼容演示：新增一条（GET 方式，非生产用）
+ * - POST   /api/items        —— 标准新增，body: { name }
+ */
 const express = require('express');
 const mongoose = require('mongoose');
 

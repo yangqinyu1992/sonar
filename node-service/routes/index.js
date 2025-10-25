@@ -1,3 +1,7 @@
+/*
+ * 根路由
+ * GET /            —— 健康检查/欢迎信息
+ */
 const express = require('express');
 const router = express.Router();
 

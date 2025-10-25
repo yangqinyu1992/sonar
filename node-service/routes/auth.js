@@ -1,3 +1,13 @@
+/*
+ * 认证与用户路由
+ * 路径前缀：/api/auth
+ * - POST /api/auth/register  —— 注册用户到 MongoDB（users 集合），body: { username, password, nickname? }
+ * - POST /api/auth/login     —— 登录并签发 JWT，body: { username, password }
+ * - GET  /api/auth/profile   —— 获取当前用户信息（需 Authorization: Bearer <token>）
+ * 关键环境变量：
+ * - JWT_SECRET：JWT 密钥（务必在生产修改）
+ * - JWT_EXPIRES_IN：JWT 过期时间（如 7d）
+ */
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');

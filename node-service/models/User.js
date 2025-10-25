@@ -1,3 +1,10 @@
+/*
+ * 用户模型（MongoDB / users 集合）
+ * 字段：
+ * - username（唯一索引）
+ * - passwordHash（bcrypt 加密）
+ * - nickname、roles、createdAt
+ */
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema(

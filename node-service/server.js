@@ -1,3 +1,14 @@
+/*
+ * Node 服务主入口（Express + WebSocket）
+ * 功能概述：
+ * - 提供 REST 接口（/api/auth、/api/items、/api/version）
+ * - 连接 MongoDB（MONGO_URI）
+ * - 通过 WebSocket 向前端推送版本更新（/ws/version）
+ * 关键环境变量：
+ * - PORT：服务端口，默认 3000
+ * - MONGO_URI：MongoDB 连接串
+ * - APP_VERSION/BUILD_TIME/COMMIT_SHA：版本信息（用于 /api/version 与 WS 推送）
+ */
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');

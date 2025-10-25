@@ -1,3 +1,11 @@
+/*
+ * 版本信息与广播路由
+ * 路径前缀：/api/version
+ * - GET  /api/version                —— 获取当前版本信息 { version, buildTime, commit }
+ * - POST /api/version/broadcast      —— 主动广播版本到所有 WS 客户端（需 x-admin-token）
+ *   头部：x-admin-token = VERSION_BROADCAST_TOKEN
+ *   请求体（可选覆盖）：{ version?, buildTime?, commit? }
+ */
 const express = require('express');
 const { broadcast } = require('../wsHub');
 const router = express.Router();
