@@ -7,17 +7,23 @@ ENV TZ=Asia/Shanghai
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json
-COPY package*.json ./
+# 复制 package.json 和 pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
+
+# 安装 pnpm
+RUN npm install -g pnpm
+
+# 配置 pnpm 使用 shamefully-hoist
+RUN echo "shamefully-hoist=true" > ./.npmrc
 
 # 安装依赖
-RUN npm install --registry=https://registry.npmmirror.com
+RUN pnpm install --registry=https://registry.npmmirror.com
 
 # 复制全部项目文件
 COPY . .
 
 # 打包前端应用
-RUN npm run build
+RUN pnpm run build
 
 # 2️⃣  使用 Nginx 作为服务器
 FROM nginx:alpine

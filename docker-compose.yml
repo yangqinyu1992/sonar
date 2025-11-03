@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   frontend:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +16,7 @@ services:
       - backend
 
   backend:
+    restart: unless-stopped
     build:
       context: ./node-service
     ports:
@@ -33,6 +35,7 @@ services:
       - database
 
   database:
+    restart: unless-stopped
     image: mongo:latest
     # No host port exposure; backend reaches via service name in internal network
     volumes:
