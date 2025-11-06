@@ -11,6 +11,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 
 const router = express.Router();
@@ -77,4 +78,91 @@ router.get('/profile', authMiddleware, async (req, res) => {
   }
 });
 
-module.exports = router;
+// POST /api/auth/change-password { oldPassword, newPassword } (auth required)
+router.post('/change-password', authMiddleware, express.json(), async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body || {};
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Old password and new password are required' });
+    }
+
+    const user = await User.findById(req.user.uid);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid old password' });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return res.json({ message: 'Password changed successfully' });
+  } catch (e) {
+    console.error('Change password failed:', e);
+    return res.status(500).json({ message: 'Change password failed' });
+  }
+});
+
+// POST /api/auth/forgot-password { username }
+router.post('/forgot-password', express.json(), async (req, res) => {
+  try {
+    const { username } = req.body || {};
+    if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      // For security, don't reveal if user exists or not
+      return res.json({ message: 'If a matching account is found, a password reset token will be sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // In a real application, you would email this token to the user.
+    // For this demo, we'll return it in the response.
+    return res.json({ message: 'Password reset token generated', resetToken });
+  } catch (e) {
+    console.error('Forgot password failed:', e);
+    return res.status(500).json({ message: 'Forgot password failed' });
+  }
+});
+
+// POST /api/auth/reset-password/:token { newPassword }
+router.post('/reset-password/:token', express.json(), async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body || {};
+
+    if (!newPassword) {
+      return res.status(400).json({ message: 'New password is required' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.json({ message: 'Password has been reset successfully.' });
+  } catch (e) {
+    console.error('Reset password failed:', e);
+    return res.status(500).json({ message: 'Reset password failed' });
+  }
+});
+
+module.exports = { router, authMiddleware };

@@ -13,7 +13,9 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     nickname: { type: String },
     roles: { type: [String], default: ['user'] },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
   },
   { collection: 'users' }
 );

@@ -7,6 +7,7 @@
  */
 const express = require('express');
 const mongoose = require('mongoose');
+const { authMiddleware } = require('./auth'); // Import authMiddleware
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ const ItemSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 const Item = mongoose.models.Item || mongoose.model('Item', ItemSchema);
+
+router.use(authMiddleware); // Apply authMiddleware to all routes in this router
 
 // List items: GET /api/items
 router.get('/', async (req, res) => {

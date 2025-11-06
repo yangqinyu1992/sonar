@@ -22,10 +22,6 @@ RUN pnpm install --registry=https://registry.npmmirror.com
 # 复制全部项目文件
 COPY . .
 
-# 打包前端应用
-RUN pnpm run build
-
-# 2️⃣  使用 Nginx 作为服务器
 FROM nginx:alpine
 
 # 删除默认 Nginx 配置

@@ -14,6 +14,8 @@ const http = require('http');
 const mongoose = require('mongoose');
 const { WebSocketServer } = require('ws');
 const { setBroadcaster } = require('./wsHub');
+const swaggerUi = require('swagger-ui-express');
+const swaggerFile = require('./swagger_output.json');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,12 +39,15 @@ mongoose.connect(MONGO_URI)
 const indexRouter = require('./routes/index');
 const itemsRouter = require('./routes/items');
 const versionRouter = require('./routes/version');
-const authRouter = require('./routes/auth');
+const { router: authRouter } = require('./routes/auth');
 
 app.use('/', indexRouter);
 app.use('/api/items', itemsRouter);
 app.use('/api/version', versionRouter);
 app.use('/api/auth', authRouter);
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 // Create HTTP server to attach WebSocket
 const server = http.createServer(app);

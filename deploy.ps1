@@ -12,7 +12,8 @@ param(                                         # 定义脚本参数
     [string]$envName = "production",           # 环境名，默认 production
     [switch]$clean,                             # 是否清理 docker-compose 创建的资源
     [switch]$prune,                             # 是否清理未使用的镜像/网络/容器/卷
-    [switch]$recreate                           # 是否强制重建容器
+    [switch]$recreate,                           # 是否强制重建容器
+    [string]$deployTarget = "all"               # 部署目标：all, frontend, backend
 )
 
 # NOTE: ASCII-only output to avoid encoding issues on Windows PowerShell  # 提示：输出仅 ASCII，避免编码问题
@@ -142,6 +143,22 @@ Write-Host "Using APP_VERSION = $env:APP_VERSION, BUILD_TIME = $env:BUILD_TIME, 
 Write-Host "Starting docker-compose deployment..."  # 提示开始部署
 $composeArgs = @("up", "--build", "-d")         # 组合 compose 参数（构建并后台启动）
 if ($recreate) { $composeArgs += "--force-recreate" } # 若指定重建，则追加参数
+
+# Add conditional service deployment
+if ($deployTarget -eq "frontend") {
+    $composeArgs += "--no-deps"
+    $composeArgs += "frontend"
+    Write-Host "Deploying only frontend service. Other services will not be affected."
+} elseif ($deployTarget -eq "backend") {
+    $composeArgs += "--no-deps"
+    $composeArgs += "backend"
+    Write-Host "Deploying only backend service. Other services will not be affected."
+} elseif ($deployTarget -eq "all") {
+    Write-Host "Deploying all services (frontend and backend)."
+} else {
+    Write-Host "Error: Invalid deployTarget specified. Must be 'all', 'frontend', or 'backend'."
+    exit 1
+}
 
 & docker-compose @composeArgs                      # 执行 docker-compose 命令
 
